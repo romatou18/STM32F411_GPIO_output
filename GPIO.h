@@ -8,9 +8,9 @@
 8.4.1 GPIO port mode register (GPIOx_MODER) (x = A..E and H)
 Address offset: 0x00
 Reset values:
-• 0xA800 0000 for port A
-• 0x0000 0280 for port B
-• 0x0000 0000 for other ports
+ï¿½ 0xA800 0000 for port A
+ï¿½ 0x0000 0280 for port B
+ï¿½ 0x0000 0000 for other ports
 
 1. take memory map address : PC : 0x4002 0800 - 0x4002 0BFF
 2. apply offset: 
@@ -43,20 +43,26 @@ and GPIOx_AFRL).
 // configure PC13 ==> GPIO C13
 
 */
+// see 6.3.22 RCC register map => offset GPIOxEN
 #define RCC_AHB1_ENR_CPIO_C_RANGE 2
+#define RCC_AHB1_ENR_CPIO_B_RANGE 1
+
 #define RCC_AHB1 (0x40023800)
 #define RCC_AHB1ENR (RCC_AHB1 + 0x30) // Enable the BUS 1st
 // look for GPIOCEN in docs. ==> Bit 2 GPIOCEN: IO port C clock enable
 
 
+//see memory map table
 #define GPIO_C_BASE  (0x40020800)
+#define GPIO_B_BASE  (0x40020400)
+
 #define GPIO_OFF_MODER (GPIO_C_BASE + 0x00 )
 #define GPIO_OFF_TYPER (GPIO_C_BASE + 0x04)
 #define GPIO_OFF_SPEEDR (GPIO_C_BASE + 0x08)
 #define GPIO_OFF_PUDR (GPIO_C_BASE + 0x0C)
 #define GPIO_OFF_BSRR (GPIO_C_BASE + 0x18)
 #define GPIO_PC13_BIT_SHIFT 26
-
+#define BIT(x) (1U << x)
 
 typedef struct
 {
