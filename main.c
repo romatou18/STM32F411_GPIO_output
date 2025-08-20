@@ -3,6 +3,16 @@
 #include "GPIO.h"
 #include "Utils.h"
 
+static int pinPB7Counter = 0;
+static GPIOGeneralRegister* GPIO_C15;
+static GPIOGeneralRegister* GPIO_B7;
+
+
+void count_pin_high()
+{
+	pinPB7Counter++;
+}
+
 void gpioC13_output_on_off()
 {
 	// mode to output set bit 26-27 to b01/0x1	
@@ -79,19 +89,11 @@ void gpio_voltage_measurment_b7()
 
 	//detect use IDR if is set. will be an int variable value, then converted to boolean.
 	//volatile bool pinPB7Status;
-	volatile uint16_t val;
-	gpioC13_output_on_off();
-	val = ((GPIO_B7->IDR) & BIT(7));
 	
-	if(val > 0)
-	{
-		gpioC13_output_on_off();
-	}
 }
 
 void gpio_voltage_measurment_C15()
 {
-	GPIOGeneralRegister* GPIO_C15;
 	SET_BIT_REG32(REG32_GET(RCC_AHB1ENR), RCC_AHB1_ENR_CPIO_C_RANGE);
 
 	GPIO_C15 = (GPIOGeneralRegister*) GPIO_C_BASE;
@@ -107,25 +109,32 @@ void gpio_voltage_measurment_C15()
 	//GPIO_C15->OSPEEDR &= ~(uint32_t) (BIT(31)); // 15 0
 
 	// GPIO_C15->PUPDR = 0x00000000;
-	GPIO_C15->PUPDR |= BIT(31); // Pull up 01/ pull down 10
-	//GPIO_C15->PUPDR &= ~(uint32_t)  BIT(14);
+	GPIO_C15->PUPDR |= BIT(30); // Pull up 01/ pull down 10 OK
+	//GPIO_C15->PUPDR &= ~(uint32_t)  BIT(30);
+	//GPIO_C15->PUPDR &= ~(uint32_t)  BIT(31);
 
 	//detect use IDR if is set. will be an int variable value, then converted to boolean.
 	//gpioC13_output_on_off();
-	uint16_t val =((GPIO_C15->IDR) & BIT(15));
-
-	if(val > 0)
-	{
-		gpioC13_output_on_off();
-	}
+	
 }
 
 
 int main()
 {
+	gpio_voltage_measurment_b7();
 	gpio_voltage_measurment_C15();
-	
+	volatile bool PB7Status = false;
+	volatile bool PC15Status = false;
+
+	gpioC13_output_on_off();
 	while(1)
 	{
+		PB7Status = ((GPIO_B7->IDR) & BIT(7));
+		PC15Status = ((GPIO_C15->IDR) & BIT(15));
+		if(PC15Status)
+		{
+			count_pin_high();
+		}
+		//SysTick_Delay_ms(100);
 	}
 }
