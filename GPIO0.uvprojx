@@ -400,11 +400,6 @@
               <FilePath>.\Utils.h</FilePath>
             </File>
             <File>
-              <FileName>Retarget.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\Retarget.c</FilePath>
-            </File>
-            <File>
               <FileName>syscfg.h</FileName>
               <FileType>5</FileType>
               <FilePath>.\syscfg.h</FilePath>
