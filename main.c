@@ -72,7 +72,6 @@ void gpioC13_output_on_off()
 
 void gpio_voltage_measurment_b7()
 {
-	GPIOGeneralRegister* GPIO_B7;
 	SET_BIT_REG32(REG32_GET(RCC_AHB1ENR), RCC_AHB1_ENR_CPIO_B_RANGE);
 
 	GPIO_B7 = (GPIOGeneralRegister*) GPIO_B_BASE;
@@ -109,7 +108,7 @@ void gpio_voltage_measurment_C15()
 	//GPIO_C15->OSPEEDR &= ~(uint32_t) (BIT(31)); // 15 0
 
 	// GPIO_C15->PUPDR = 0x00000000;
-	GPIO_C15->PUPDR |= BIT(30); // Pull up 01/ pull down 10 OK
+	GPIO_C15->PUPDR |= BIT(31); // Pull up 01/ pull down 10 OK
 	//GPIO_C15->PUPDR &= ~(uint32_t)  BIT(30);
 	//GPIO_C15->PUPDR &= ~(uint32_t)  BIT(31);
 
@@ -131,10 +130,17 @@ int main()
 	{
 		PB7Status = ((GPIO_B7->IDR) & BIT(7));
 		PC15Status = ((GPIO_C15->IDR) & BIT(15));
-		if(PC15Status)
+		if(PC15Status )
 		{
 			count_pin_high();
 		}
+		
+		if(PB7Status )
+		{
+			count_pin_high();
+		}
+		
+		
 		//SysTick_Delay_ms(100);
 	}
 }
