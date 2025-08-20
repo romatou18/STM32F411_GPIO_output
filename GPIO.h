@@ -30,7 +30,7 @@ and GPIOx_AFRL).
 //GPIOx_IDR GPIO input data off 0x10
 //GPIOx_ODR GPIO output data off 0x014 ==> force change value of the output
 //GPIOx_BSRR GPIO Bit set/reset off 0x18 ==> set value to high or low.
-//GPIOx_LCKR GPIO configuration lock off 0x1C
+//GPIOx_LCKR GPIO configuration lock off 0x1C 
 //GPIOx_AFRH GPIO Alternate function low register off 0x20
 //GPIOx_AFRL GPIO Alternate function high register off 0x24
 

@@ -1,6 +1,6 @@
 #pragma once
 typedef uint32_t reg32v_t;
-#define REG32_GET(x) (*((reg32v_t*) (x)))
+#define REG32_GET(x) (*((reg32v_t*) (x))) 
 #define REG32_INT(x)  (x)
 
 	
