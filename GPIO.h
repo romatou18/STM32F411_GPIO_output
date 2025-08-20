@@ -44,19 +44,26 @@ and GPIOx_AFRL).
 
 */
 // see 6.3.22 RCC register map => offset GPIOxEN
-#define RCC_AHB1_ENR_CPIO_C_RANGE 2
-#define RCC_AHB1_ENR_CPIO_B_RANGE 1
+#define RCC_AHB1_ENR_CPIO_C_RANGE 2U // #define RCC_AHB1ENR_GPIOCEN_Pos            (2U)  
+#define RCC_AHB1_ENR_CPIO_B_RANGE 1U // #define RCC_AHB1ENR_GPIOBEN_Pos            (1U)  
+
+//#define PERIPH_BASE           0x40000000UL
+// #define AHB1PERIPH_BASE       (PERIPH_BASE + 0x00020000UL)
+// #define GPIOC_BASE            (AHB1PERIPH_BASE + 0x0800UL)
+// #define RCC_BASE              (AHB1PERIPH_BASE + 0x3800UL) // 0x40023800 ==> RCC_BASE_ADR YES !!!
 
 
+// Address offsets found in RCC typedef
+// } RCC_TypeDef; in C:\Arm\Packs\Keil\STM32F4xx_DFP\2.17.1\Drivers\CMSIS\Device\ST\STM32F4xx\Include\stm32f411xe.h
 #define RCC_BASE_ADR (0x40023800)
-#define RCC_AHB1ENR (RCC_BASE_ADR + 0x30) // Enable the BUS 1st
+#define RCC_AHB1ENR (RCC_BASE_ADR + 0x30) // Enable the BUS AHB1 that has GPIOB+C controller.
 // look for GPIOCEN in docs. ==> Bit 2 GPIOCEN: IO port C clock enable
 #define RCC_APB2ENR_OFFSET 0x44
 #define RCC_APB2ENR (RCC_BASE_ADR + RCC_APB2ENR_OFFSET)
 
 
 //see memory map table
-#define GPIO_C_BASE  (0x40020800)
+#define GPIO_C_BASE  (0x40020800) // #define GPIOC_BASE
 #define GPIOC_MODER_RESET_VALUE 0x00000000
 
 #define GPIO_B_BASE  (0x40020400) // memory map
@@ -75,16 +82,17 @@ and GPIOx_AFRL).
 #define GPIO_PC13_BIT_SHIFT 26
 #define BIT(x) (1U << x)
 
-typedef struct
-{
-	uint32_t MODER; //0x0
-	uint32_t OTYPER; //0x4
-	uint32_t OSPEEDR; //0x8
-	uint32_t PUPDR; //0xC
-	uint32_t IDR; //0x10
-	uint32_t ODR; //0x14
-	uint32_t BSRR; //0x18
-	uint32_t LCKR; //0x1C
-	uint32_t AFRL; //0x20
-	uint32_t AFRH; //0x24
-} GPIOGeneralRegister;
+// typedef struct
+// {
+// 	uint32_t MODER; //0x0
+// 	uint32_t OTYPER; //0x4
+// 	uint32_t OSPEEDR; //0x8
+// 	uint32_t PUPDR; //0xC
+// 	uint32_t IDR; //0x10
+// 	uint32_t ODR; //0x14
+// 	uint32_t BSRR; //0x18
+// 	uint32_t LCKR; //0x1C
+// 	uint32_t AFRL; //0x20
+// 	uint32_t AFRH; //0x24
+// } GPIOGeneralRegister; // GPIO_TypeDef
+typedef GPIO_TypeDef GPIOGeneralRegister;

@@ -152,7 +152,7 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>174</LineNumber>
+          <LineNumber>146</LineNumber>
           <EnabledFlag>1</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -168,7 +168,7 @@
         <Bp>
           <Number>1</Number>
           <Type>0</Type>
-          <LineNumber>170</LineNumber>
+          <LineNumber>139</LineNumber>
           <EnabledFlag>1</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -184,7 +184,7 @@
         <Bp>
           <Number>2</Number>
           <Type>0</Type>
-          <LineNumber>169</LineNumber>
+          <LineNumber>136</LineNumber>
           <EnabledFlag>1</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -200,7 +200,7 @@
         <Bp>
           <Number>3</Number>
           <Type>0</Type>
-          <LineNumber>165</LineNumber>
+          <LineNumber>100</LineNumber>
           <EnabledFlag>1</EnabledFlag>
           <Address>0</Address>
           <ByteObject>0</ByteObject>
@@ -216,22 +216,6 @@
         <Bp>
           <Number>4</Number>
           <Type>0</Type>
-          <LineNumber>159</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>0</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>0</BreakIfRCount>
-          <Filename>.\main.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression></Expression>
-        </Bp>
-        <Bp>
-          <Number>5</Number>
-          <Type>0</Type>
           <LineNumber>240</LineNumber>
           <EnabledFlag>1</EnabledFlag>
           <Address>0</Address>
@@ -246,7 +230,7 @@
           <Expression></Expression>
         </Bp>
         <Bp>
-          <Number>6</Number>
+          <Number>5</Number>
           <Type>0</Type>
           <LineNumber>221</LineNumber>
           <EnabledFlag>1</EnabledFlag>
@@ -268,12 +252,27 @@
           <WinNumber>1</WinNumber>
           <ItemText>GPIO_C15-&gt;MODER</ItemText>
         </Ww>
+        <Ww>
+          <count>1</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>RCC_AHB1ENR</ItemText>
+        </Ww>
+        <Ww>
+          <count>2</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>RCC-&gt;AHB1ENR</ItemText>
+        </Ww>
+        <Ww>
+          <count>3</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>REG32_GET(RCC-&gt;AHB1ENR)</ItemText>
+        </Ww>
       </WatchWindow1>
       <MemoryWindow1>
         <Mm>
           <WinNumber>1</WinNumber>
           <SubType>0</SubType>
-          <ItemText>GPIO_C15-&gt;MODER</ItemText>
+          <ItemText>RCC_AHB1ENR</ItemText>
           <AccSizeX>0</AccSizeX>
         </Mm>
       </MemoryWindow1>

@@ -133,7 +133,17 @@ void EXTI9_5_IRQHandler()
 
 int main()
 {
+	if(RCC_AHB1ENR_GPIOCEN_Pos != RCC_AHB1_ENR_CPIO_C_RANGE)
+	{
+		return 1;
+	}
 	
+	if(GPIO_B_BASE != GPIOB_BASE)
+	{
+		return(4);
+	}
+	
+
 	// ENABLE clocks in RCC Register. To enable BUSES that depend on it
 	// enable bus for syscfg 6.3.12 RCC APB2 peripheral clock enable register
 	SET_BIT_REG32(REG32_GET(RCC_APB2ENR), 14); // => syscfg is enabled on it.
@@ -147,6 +157,7 @@ int main()
 	exti = (EXTI_TypeDef*)(EXTI_ADDRESS);
 	exti->IMR  |= BIT(7); // Pin7 is not Masked. 
 	exti->RTSR |= BIT(7); // rising trigger selection events get watched
+	
 	
 	//Enabling Interrupts NVIC ! 
 	NVIC_EnableIRQ(EXTI9_5_IRQn);
