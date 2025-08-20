@@ -67,22 +67,23 @@ void gpio_voltage_measurment_b7()
 
 	GPIO_B7 = (GPIOGeneralRegister*) GPIO_B_BASE;
 	GPIO_B7->MODER = GPIOC_MODER_RESET_VALUE;	
-	GPIO_B7->MODER &= ~(uint32_t) (BIT(14) | BIT(15)); //INPUT MODE
+	GPIO_B7->MODER &= ~(uint32_t) (BIT(14) | BIT(15)); //INPUT MODE 00
 
-	GPIO_B7->OTYPER &= ~(uint32_t) BIT(7); // PUSH+PULL out
+	GPIO_B7->OTYPER &= ~(uint32_t) BIT(7); // PUSH+PULL out 1
 
 	GPIO_B7->OSPEEDR = GPIOB_OSPEEDR_RESET_VALUE;
 	GPIO_B7->OSPEEDR |= (BIT(14));  // Medium speed 01.
-	//GPIO_B7->OSPEEDR &= ~(uint32_t) (BIT(15)); // 15 0
 	
 	GPIO_B7->PUPDR = GPIOB_PUPDR_RESET_VALUE;
-	GPIO_B7->PUPDR |= BIT(14); // Pull down 10
-	//GPIO_B7->PUPDR &= ~(uint32_t)  BIT(14);
+	GPIO_B7->PUPDR |= BIT(14); // Pull up 01
 
 	//detect use IDR if is set. will be an int variable value, then converted to boolean.
-	volatile bool pinPB7Status;
-	pinPB7Status = ((GPIO_B7->IDR) & BIT(7));
-	if(pinPB7Status)
+	//volatile bool pinPB7Status;
+	volatile uint16_t val;
+	gpioC13_output_on_off();
+	val = ((GPIO_B7->IDR) & BIT(7));
+	
+	if(val > 0)
 	{
 		gpioC13_output_on_off();
 	}
@@ -123,7 +124,7 @@ void gpio_voltage_measurment_C15()
 
 int main()
 {
-	gpio_voltage_measurment_C15();
+	gpio_voltage_measurment_b7();
 	
 	while(1)
 	{
