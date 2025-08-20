@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include "stm32f411xe.h"
 #include "GPIO.h"
 #include "Utils.h"
 #include "syscfg.h"
@@ -153,7 +152,7 @@ int main()
 	NVIC_EnableIRQ(EXTI9_5_IRQn);
   //FTSR
 	
-	printf("hello");
+	//printf("hello");
 	gpio_voltage_measurment_b7();
 	gpio_voltage_measurment_C15();
 	//volatile bool PB7Status = false;
