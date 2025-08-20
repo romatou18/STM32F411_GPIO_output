@@ -1,12 +1,18 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include "stm32f411xe.h"
 #include "GPIO.h"
 #include "Utils.h"
+#include "syscfg.h"
 
-static int pinPB7Counter = 0;
+static volatile int pinPB7Counter = 0;
+
+//defining register pointers
 static GPIOGeneralRegister* GPIO_C15;
 static GPIOGeneralRegister* GPIO_B7;
-
+static SYSCFG_TypeDef* syscfg;
+static EXTI_TypeDef* exti;
 
 void count_pin_high()
 {
@@ -93,6 +99,7 @@ void gpio_voltage_measurment_b7()
 
 void gpio_voltage_measurment_C15()
 {
+	//SET_BIT_REG32(REG32_GET(RCC_AHB1ENR), RCC_AHB1_ENR_CPIO_C_RANGE);
 	SET_BIT_REG32(REG32_GET(RCC_AHB1ENR), RCC_AHB1_ENR_CPIO_C_RANGE);
 
 	GPIO_C15 = (GPIOGeneralRegister*) GPIO_C_BASE;
@@ -118,16 +125,44 @@ void gpio_voltage_measurment_C15()
 }
 
 
+
+void EXTI9_5_IRQHandler()
+{
+	count_pin_high();
+	SET_BIT_REG32(REG32_GET(EXTI_ADDRESS + 0x14), 7); // Clear interrupt.
+}
+
 int main()
 {
+	
+	// ENABLE clocks in RCC Register. To enable BUSES that depend on it
+	// enable bus for syscfg 6.3.12 RCC APB2 peripheral clock enable register
+	SET_BIT_REG32(REG32_GET(RCC_APB2ENR), 14); // => syscfg is enabled on it.
+
+	//SETTING UP SYSCFG
+	syscfg = (SYSCFG_TypeDef*)(SYSCFG_ADR);
+	syscfg->EXTICR[1] |= BIT(12); // configure external Interrupts config register on PBx pins  // EXT7 bits 12-15
+	
+	// SETTING UP EXTI INTERRUPT for PB7
+	// Configure external pin interrupt, using EXT7 for PB7, IRQ handler EXTI9_5
+	exti = (EXTI_TypeDef*)(EXTI_ADDRESS);
+	exti->IMR  |= BIT(7); // Pin7 is not Masked. 
+	exti->RTSR |= BIT(7); // rising trigger selection events get watched
+	
+	//Enabling Interrupts NVIC ! 
+	NVIC_EnableIRQ(EXTI9_5_IRQn);
+  //FTSR
+	
+	printf("hello");
 	gpio_voltage_measurment_b7();
 	gpio_voltage_measurment_C15();
-	volatile bool PB7Status = false;
-	volatile bool PC15Status = false;
+	//volatile bool PB7Status = false;
+	//volatile bool PC15Status = false;
 
 	gpioC13_output_on_off();
 	while(1)
 	{
+		/*
 		PB7Status = ((GPIO_B7->IDR) & BIT(7));
 		PC15Status = ((GPIO_C15->IDR) & BIT(15));
 		if(PC15Status )
@@ -139,7 +174,7 @@ int main()
 		{
 			count_pin_high();
 		}
-		
+		*/
 		
 		//SysTick_Delay_ms(100);
 	}

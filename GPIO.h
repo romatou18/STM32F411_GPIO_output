@@ -48,9 +48,11 @@ and GPIOx_AFRL).
 #define RCC_AHB1_ENR_CPIO_B_RANGE 1
 
 
-#define RCC_AHB1 (0x40023800)
-#define RCC_AHB1ENR (RCC_AHB1 + 0x30) // Enable the BUS 1st
+#define RCC_BASE_ADR (0x40023800)
+#define RCC_AHB1ENR (RCC_BASE_ADR + 0x30) // Enable the BUS 1st
 // look for GPIOCEN in docs. ==> Bit 2 GPIOCEN: IO port C clock enable
+#define RCC_APB2ENR_OFFSET 0x44
+#define RCC_APB2ENR (RCC_BASE_ADR + RCC_APB2ENR_OFFSET)
 
 
 //see memory map table
