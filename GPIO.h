@@ -47,6 +47,7 @@ and GPIOx_AFRL).
 #define RCC_AHB1_ENR_CPIO_C_RANGE 2
 #define RCC_AHB1_ENR_CPIO_B_RANGE 1
 
+
 #define RCC_AHB1 (0x40023800)
 #define RCC_AHB1ENR (RCC_AHB1 + 0x30) // Enable the BUS 1st
 // look for GPIOCEN in docs. ==> Bit 2 GPIOCEN: IO port C clock enable
@@ -54,7 +55,15 @@ and GPIOx_AFRL).
 
 //see memory map table
 #define GPIO_C_BASE  (0x40020800)
-#define GPIO_B_BASE  (0x40020400)
+#define GPIOC_MODER_RESET_VALUE 0x00000000
+
+#define GPIO_B_BASE  (0x40020400) // memory map
+// section 8 GPIO page 158
+#define GPIOB_MODER_RESET_VALUE   0x00000280 
+#define GPIOB_OSPEEDR_RESET_VALUE 0x000000C0
+#define GPIOB_PUPDR_RESET_VALUE   0x00000100
+
+
 
 #define GPIO_OFF_MODER (GPIO_C_BASE + 0x00 )
 #define GPIO_OFF_TYPER (GPIO_C_BASE + 0x04)
