@@ -75,7 +75,7 @@ void gpio_voltage_measurment_b7()
 	GPIO_B7->OSPEEDR |= (BIT(14));  // Medium speed 01.
 	
 	GPIO_B7->PUPDR = GPIOB_PUPDR_RESET_VALUE;
-	GPIO_B7->PUPDR |= BIT(14); // Pull up 01
+	GPIO_B7->PUPDR |= BIT(15); // Pull up 01 / pull down 10.
 
 	//detect use IDR if is set. will be an int variable value, then converted to boolean.
 	//volatile bool pinPB7Status;
@@ -107,15 +107,14 @@ void gpio_voltage_measurment_C15()
 	//GPIO_C15->OSPEEDR &= ~(uint32_t) (BIT(31)); // 15 0
 
 	// GPIO_C15->PUPDR = 0x00000000;
-	GPIO_C15->PUPDR |= BIT(30); // Pull up
+	GPIO_C15->PUPDR |= BIT(31); // Pull up 01/ pull down 10
 	//GPIO_C15->PUPDR &= ~(uint32_t)  BIT(14);
 
 	//detect use IDR if is set. will be an int variable value, then converted to boolean.
-	volatile bool pinPC15Status;
-	gpioC13_output_on_off();
-	pinPC15Status = (bool)((GPIO_C15->IDR) & BIT(15));
+	//gpioC13_output_on_off();
+	uint16_t val =((GPIO_C15->IDR) & BIT(15));
 
-	if(pinPC15Status)
+	if(val > 0)
 	{
 		gpioC13_output_on_off();
 	}
@@ -124,7 +123,7 @@ void gpio_voltage_measurment_C15()
 
 int main()
 {
-	gpio_voltage_measurment_b7();
+	gpio_voltage_measurment_C15();
 	
 	while(1)
 	{
