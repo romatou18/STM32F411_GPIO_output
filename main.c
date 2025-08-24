@@ -30,11 +30,13 @@ static GPIOGeneralRegister* GPIO_C15;
 static GPIOGeneralRegister* GPIO_B7;
 static GPIOGeneralRegister* GPIO_B12;
 static GPIOGeneralRegister* GPIO_B6;
+static GPIOGeneralRegister* GPIO_A0;
 static SYSCFG_TypeDef* syscfg;
 static EXTI_TypeDef* exti;
 
 static TIM_TypeDef_timers* timer3;
 static TIM_TypeDef_timers* timer4;
+static TIM_TypeDef_timers* timer2;
 
 void count_pin_high()
 {
@@ -235,7 +237,7 @@ void PWM_Tim4()
 {
 	//configure Pin PB6 to AF2
 	GPIO_B6 = (GPIOGeneralRegister*) GPIOB;
-	RCC->AHB1ENR |= RCC_AHB1LPENR_GPIOBLPEN; // Emable bus for B gpio.
+	RCC->AHB1ENR |= RCC_AHB1LPENR_GPIOBLPEN; // Enable bus for B gpio.
 
 	//SET PB6 to use AF2
 	GPIO_B6->MODER |= BIT(13); // set bit 1312 t0 b10.
@@ -243,17 +245,18 @@ void PWM_Tim4()
 	GPIO_B6->OSPEEDR |= BIT(13);
 	// AFRL AF2 config page 161
 	// 0010: AF2
-	GPIO_B6->AFR[0] |= (AF2 << 24);
-	//GPIO_B6->AFR[0] |= GPIO_AFRL_AFRL6_2;
+	//GPIO_B6->AFR[0] |= (AF2 << 24);
+	GPIO_B6->AFR[0] = GPIO_AFRL_AFRL6_1;// does not work with _2 !! BUG ! wrong defs !
 	
 
 	TIM4EnableAPB1ENR();
 	timer4  = (TIM_TypeDef_timers*) TIM4;
-	timer4->PSC = 1999; // prescaler to cpu clock = CPU F/(1+ PSC)  e.g. 16MHZ / 2000 = 8000.
-	timer4->ARR = 8000; // this will be the period of PWM / frequency
+	timer4->PSC = 39; // prescaler to cpu clock = CPU F/(1+ PSC)  e.g. 16MHZ / 2000 = 8000.
+	timer4->ARR = 8000; // this will be the period of PWM 
+	 
 	 // is the duty cycle of PWM length of the pulses
 	 // using channel 1 CCR1
-	timer4->CCR1 = 4000 ; //4000 / 8000 =  0.5HZ
+	timer4->CCR1 = 100 ; // duty / period = Freq 4000 / 8000 =  0.5HZ // duty cycle
 
 	//Setup PWM1 mode
 	// CCMR capture compare mode  OC1M 110 PWM mode bit 5 and 6. bit 4 == 0.
@@ -278,6 +281,57 @@ void PWM_Tim4()
 	// So confire PB6 to be AF2 Alternate function 2
 	
 }
+
+void inputCaptureRisingFallingEdgesTim2PA0()
+{
+	GPIO_A0 = (GPIOGeneralRegister*) GPIOA;
+	RCC->AHB1ENR |= RCC_AHB1LPENR_GPIOALPEN; // Enable bus for gpio range A.
+
+	TIM2EnableAPB1ENR();
+	timer2  = (TIM_TypeDef_timers*) TIM2;
+
+	GPIOA->MODER &= ~(0x03 << (0 * 2)); // Clear bits 1:0
+	GPIO_A0->MODER &= ~(BIT(0)); // AF Mode 10
+	GPIO_A0->MODER |= BIT(1); // AF Mode 10
+	
+    GPIO_A0->OTYPER &= ~((unsigned int)BIT(0)); // push pull output. 01
+
+	GPIO_A0->OSPEEDR |= BIT(1); // fast 10
+	
+	GPIOA->PUPDR &= ~(0x03 << (0 * 2)); // Clear bits 1:0
+	GPIOA->PUPDR |=  (0x10 << (0 * 2)); // Set bits 1:0 to 10 (Pull-down) 
+	
+	GPIOA->AFR[0] &= ~(0x0F << (0 * 4)); // Clear bits 3:0
+	GPIO_A0->AFR[0] |= BIT(0); // AF1 enabled on PA0
+
+	//TIMxCR2 // only enable channel 1 not XOR component. T1S set to 0. Refer to Timer archi diagram 
+	timer2->CR2 &= ~(BIT(TIM_CR2_TI1S_Pos)); //7
+	timer2->CCMR1 |= BIT(5);
+	timer2->CCER |= (BIT(1) | BIT(3));
+	//timer2->CCER |= (TIM_CCER_CC1P_Pos | TIM_CCER_CC1NP_Pos); // polarity detect both edges.
+	//CC1S 01
+	timer2->CCMR1 |= TIM_CCMR1_CC1S_0; /* Set CH1 to input capture 01*/
+	//timer2->CCMR1 &= ~((unsigned int)(BIT(TIM_CCMR1_CC1S_Pos+1))); 
+	
+	//OC1PE OC1FE both to 00. both disabled
+	timer2->CCMR1 &= ~((unsigned int)(BIT(2)|BIT(3))); 
+	timer2->CCER |= TIM_CCER_CC1E; /* 0 Set CH1 to capture ENABLED*/
+	timer2->DIER |= BIT(1); //CC1IE enable Capture/compare trigger event
+	timer2->CR1 |= TIM_CR1_CEN; // Enable the counter on timer 2
+
+	//Enable timer interrupt
+	NVIC_EnableIRQ(TIM2_IRQn);
+}
+
+void TIM2_IRQHandler()
+{
+	// need to read CCR register to check if CCR == CNT. which should be case when detecting an edge.
+	static volatile uint32_t readCCR = 0;
+	// clear interrupt flags 
+	timer2->SR &= ~((unsigned int) (TIM_SR_CC1OF_Pos | TIM_SR_CC1IF_Pos));
+	readCCR = timer2->CCR1;
+}
+
 int main()
 {
 	//SystemClock_Config();
@@ -328,6 +382,8 @@ int main()
 	
 	// TIM3InterruptLEDB12Toggle();
 	PWM_Tim4();
+	
+	inputCaptureRisingFallingEdgesTim2PA0();
 	
 	while(1)
 	{
