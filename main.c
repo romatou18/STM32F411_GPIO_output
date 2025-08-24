@@ -4,22 +4,44 @@
 #include "GPIO.h"
 #include "Utils.h"
 #include "syscfg.h"
+#include "NVIC.h"
+#include "timer.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int _write(int file, char *ptr, int len) {
+  int DataIdx;
+  for (DataIdx = 0; DataIdx < len; DataIdx++) { // 96 84 80 50 48 32 24 25 16
+    ITM_SendChar(*ptr++);
+  }
+  return len;
+}
+
+#ifdef __cplusplus
+}
+#endif
 
 static volatile int pinPB7Counter = 0;
-
+static volatile bool pinIncEvent = false;
 //defining register pointers
 static GPIOGeneralRegister* GPIO_C15;
 static GPIOGeneralRegister* GPIO_B7;
+static GPIOGeneralRegister* GPIO_B12;
 static SYSCFG_TypeDef* syscfg;
 static EXTI_TypeDef* exti;
+
+static TIM_TypeDef_timers* timer3;
 
 void count_pin_high()
 {
 	pinPB7Counter++;
+	pinIncEvent = true;
 }
 
 void gpioC13_output_on_off()
-{
+ {
 	// mode to output set bit 26-27 to b01/0x1	
 	// Enable C GPIO RANGE : 6.3.9 RCC AHB1 peripheral clock enable register ==> bit 2 for range C
 	SET_BIT_REG32(REG32_GET(RCC_AHB1ENR), RCC_AHB1_ENR_CPIO_C_RANGE);
@@ -98,7 +120,6 @@ void gpio_voltage_measurment_b7()
 
 void gpio_voltage_measurment_C15()
 {
-	//SET_BIT_REG32(REG32_GET(RCC_AHB1ENR), RCC_AHB1_ENR_CPIO_C_RANGE);
 	SET_BIT_REG32(REG32_GET(RCC_AHB1ENR), RCC_AHB1_ENR_CPIO_C_RANGE);
 
 	GPIO_C15 = (GPIOGeneralRegister*) GPIO_C_BASE;
@@ -131,8 +152,72 @@ void EXTI9_5_IRQHandler()
 	SET_BIT_REG32(REG32_GET(EXTI_ADDRESS + 0x14), 7); // Clear interrupt.
 }
 
+void TIM3InterruptLEDB12Toggle()
+{
+	// enable GPIOB
+	GPIO_B12 = (GPIOGeneralRegister*) GPIOB;
+	RCC->AHB1ENR |= RCC_AHB1LPENR_GPIOBLPEN;
+	// set up GPIO D12.
+	GPIO_B12->MODER   |= BIT((24)); // output mode
+  /* Configure PDx pins speed to 50 MHz */  
+  GPIO_B12->OSPEEDR |= BIT((25)); // 10 high speed
+  /* Configure PDx pins Output type to push-pull */  
+  GPIO_B12->OTYPER  |= BIT((25)); // pull down 10
+	
+	//Enable TIM3 then create timer3 struct.
+	TIM3EnableAPB1ENR();
+	timer3  = (TIM_TypeDef_timers*) TIM3_BASE;
+	timer3->PSC = 1999; // prescaler to cpu clock = CPU F/(1+ PSC)  e.g. 16MHZ / 2000 = 8000.
+	timer3->ARR = 8000; // triggers event every 8000 ticks => if PSC == 8000 /8000 = every 1seconds.
+	timer3->CR1 &= ~((unsigned int)BIT(1)); // enable the update event if set to 0.
+	
+	// Enable trigger interrupt when event occurs
+	// trigger TIM3 interrupt. Enable it on NVIC.
+	timer3->DIER |= BIT(0);
+	NVIC_EnableIRQ(TIM3_IRQn);
+	
+	// Enable counter upcounter or down counter
+	// 0 down 1 up counter. 0 ==> ARR value.
+	// nothing to do leave to 0
+	
+	// CEN counter enable
+	timer3->CR1 |= BIT(0);
+	
+	// Enable the one pulse mode test later
+	//timer3->CR1 |= BIT(3);
+	
+	// finally use TIM3_IRQHandler() to toggle GPIOD12
+	
+}
+
+void TIM3_IRQHandler()
+{
+	static volatile uint8_t t3_cnt = 0;
+	
+	if(t3_cnt % 2)
+	{
+		GPIO_B12->BSRR |= (GPIO_BSRR_BR12); // reset
+	}
+	else
+	{
+		GPIO_B12->BSRR |= (GPIO_BSRR_BS12); //set
+	}
+	t3_cnt++;
+	
+	//clear UIF update interrupt flag in TIMx_SR register
+	// Check if the Update Interrupt Flag (UIF) is set
+  if (TIM3->SR & (1U << 0)) {
+    // Clear the Update Interrupt Flag by writing zero to its bit
+    TIM3->SR &= ~(1U << 0);
+    // Handle the update interrupt event
+  }
+}
+
 int main()
 {
+	//SystemClock_Config();
+	printf("clock speed %d, STM32!\n", SystemCoreClock);
+
 	if(RCC_AHB1ENR_GPIOCEN_Pos != RCC_AHB1_ENR_CPIO_C_RANGE)
 	{
 		return 1;
@@ -160,7 +245,12 @@ int main()
 	
 	
 	//Enabling Interrupts NVIC ! 
-	NVIC_EnableIRQ(EXTI9_5_IRQn);
+	//NVIC_EnableIRQ(EXTI9_5_IRQn);
+
+	// custom example
+	_NVIC_enable_(EXTI9_5_IRQn);
+	
+	
   //FTSR
 	
 	//printf("hello");
@@ -170,6 +260,8 @@ int main()
 	//volatile bool PC15Status = false;
 
 	gpioC13_output_on_off();
+	
+	TIM3InterruptLEDB12Toggle();
 	while(1)
 	{
 		/*
@@ -186,6 +278,14 @@ int main()
 		}
 		*/
 		
-		//SysTick_Delay_ms(100);
+		SysTick_Delay_ms(100);
+		if(pinIncEvent)
+		{
+			printf("pin high count INC event = %d", pinPB7Counter);
+			SysTick_Delay_ms(500);
+			pinIncEvent = false;
+		}
+		
+		
 	}
 }
