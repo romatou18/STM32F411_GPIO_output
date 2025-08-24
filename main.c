@@ -318,6 +318,8 @@ void inputCaptureRisingFallingEdgesTim2PA0()
 	timer2->CCER |= TIM_CCER_CC1E; /* 0 Set CH1 to capture ENABLED*/
 	timer2->DIER |= TIM_DIER_CC1IE; //CC1IE enable Capture/compare trigger event
 	timer2->CR1 |= TIM_CR1_CEN; // Enable the counter on timer 2
+	timer2->SMCR |= BIT(2); // SMS to Reset mode on Rising Edge: reset the CNT counter on every rising edge.
+	timer2->SMCR |= (BIT(4) | BIT(6)); //101 trigger selection to Filtered Timer input 1 TI1FP1
 
 	//Enable timer interrupt
 	NVIC_EnableIRQ(TIM2_IRQn);
@@ -330,6 +332,9 @@ void TIM2_IRQHandler()
 	// clear interrupt flags 
 	timer2->SR &= ~((unsigned int) (TIM_SR_CC1OF_Pos | TIM_SR_CC1IF_Pos));
 	readCCR = timer2->CCR1;
+
+	//reset counter to count time everytime from zero
+	//timer2->CNT = (uint32_t)0;
 }
 
 int main()
