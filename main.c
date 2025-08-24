@@ -307,16 +307,16 @@ void inputCaptureRisingFallingEdgesTim2PA0()
 	//TIMxCR2 // only enable channel 1 not XOR component. T1S set to 0. Refer to Timer archi diagram 
 	timer2->CR2 &= ~(BIT(TIM_CR2_TI1S_Pos)); //7
 	timer2->CCMR1 |= BIT(5);
-	timer2->CCER |= (BIT(1) | BIT(3));
-	//timer2->CCER |= (TIM_CCER_CC1P_Pos | TIM_CCER_CC1NP_Pos); // polarity detect both edges.
+	// timer2->CCER |= (BIT(1) | BIT(3));
+	timer2->CCER |= (TIM_CCER_CC1P | TIM_CCER_CC1NP); // polarity detect both edges.
 	//CC1S 01
 	timer2->CCMR1 |= TIM_CCMR1_CC1S_0; /* Set CH1 to input capture 01*/
 	//timer2->CCMR1 &= ~((unsigned int)(BIT(TIM_CCMR1_CC1S_Pos+1))); 
-	
+
 	//OC1PE OC1FE both to 00. both disabled
-	timer2->CCMR1 &= ~((unsigned int)(BIT(2)|BIT(3))); 
+	timer2->CCMR1 &= ~((unsigned int)(TIM_CCMR1_OC1PE | TIM_CCMR1_OC1FE)); 
 	timer2->CCER |= TIM_CCER_CC1E; /* 0 Set CH1 to capture ENABLED*/
-	timer2->DIER |= BIT(1); //CC1IE enable Capture/compare trigger event
+	timer2->DIER |= TIM_DIER_CC1IE; //CC1IE enable Capture/compare trigger event
 	timer2->CR1 |= TIM_CR1_CEN; // Enable the counter on timer 2
 
 	//Enable timer interrupt
