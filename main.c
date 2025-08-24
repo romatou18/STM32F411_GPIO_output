@@ -29,10 +29,12 @@ static volatile bool pinIncEvent = false;
 static GPIOGeneralRegister* GPIO_C15;
 static GPIOGeneralRegister* GPIO_B7;
 static GPIOGeneralRegister* GPIO_B12;
+static GPIOGeneralRegister* GPIO_B6;
 static SYSCFG_TypeDef* syscfg;
 static EXTI_TypeDef* exti;
 
 static TIM_TypeDef_timers* timer3;
+static TIM_TypeDef_timers* timer4;
 
 void count_pin_high()
 {
@@ -184,7 +186,7 @@ void TIM3InterruptLEDB12Toggle()
 	timer3->CR1 |= BIT(0);
 	
 	// Enable the one pulse mode test later
-	//timer3->CR1 |= BIT(3);
+	timer3->CR1 |= BIT(3);
 	
 	// finally use TIM3_IRQHandler() to toggle GPIOD12
 	
@@ -213,6 +215,69 @@ void TIM3_IRQHandler()
   }
 }
 
+/*
+- Depending on up or down counting in PWM1 mode:
+- when count < CCr value => High voltage value
+- when CNT > CCR => low value
+- Up counting : start counting 0 to ARR
+- down counting: start ARR to 0 meaning: it reverses the start high or low.
+
+             CNT < CCR (high) |              CNT > CCR (low)
+         Active               |               Inactive
+
+| | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | | |
+0                            CCR                                           ARR
+
+In PWM 2 : opposite : low when CNT < CCR and HIGH when CNT > CCR.
+- Again dependent if up or down counting.
+*/
+void PWM_Tim4()
+{
+	//configure Pin PB6 to AF2
+	GPIO_B6 = (GPIOGeneralRegister*) GPIOB;
+	RCC->AHB1ENR |= RCC_AHB1LPENR_GPIOBLPEN; // Emable bus for B gpio.
+
+	//SET PB6 to use AF2
+	GPIO_B6->MODER |= BIT(13); // set bit 1312 t0 b10.
+	//high speed
+	GPIO_B6->OSPEEDR |= BIT(13);
+	// AFRL AF2 config page 161
+	// 0010: AF2
+	GPIO_B6->AFR[0] |= (AF2 << 24);
+	//GPIO_B6->AFR[0] |= GPIO_AFRL_AFRL6_2;
+	
+
+	TIM4EnableAPB1ENR();
+	timer4  = (TIM_TypeDef_timers*) TIM4;
+	timer4->PSC = 1999; // prescaler to cpu clock = CPU F/(1+ PSC)  e.g. 16MHZ / 2000 = 8000.
+	timer4->ARR = 8000; // this will be the period of PWM / frequency
+	 // is the duty cycle of PWM length of the pulses
+	 // using channel 1 CCR1
+	timer4->CCR1 = 4000 ; //4000 / 8000 =  0.5HZ
+
+	//Setup PWM1 mode
+	// CCMR capture compare mode  OC1M 110 PWM mode bit 5 and 6. bit 4 == 0.
+	timer4->CCMR1 |= (TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2);
+	// Active is HIGH ouput polarity
+	timer4->CCER &= ~(TIM_CCER_CC1P); 
+	// Set Channel as output enable
+	timer4->CCMR1 &= ~(TIM_CCER_CC1E);
+
+	//auto reload enable to enable setting values in ARR and CCR registers.
+	timer4->CR1 |= TIM_CR1_ARPE; // Auto reload preload enable for ARR
+	timer4->CCMR1 |= TIM_CCMR1_OC1PE; // Enabling preload register for OC1 signal counter.
+
+	timer4->EGR |= TIM_EGR_UG; // Update Register
+
+	// CCER: Enable to start/enable compare output on the pin.
+	timer4->CCER |= TIM_CCER_CC1E; // OC1 Enable CHANNEL 1 output  signal is output on the corresponding Pin AF function TAble
+	timer4->CR1 |= TIM_CR1_CEN; // Enable the counter to timer 4
+
+	// Lookup the datasheet, Alternate function mapping Table. page 62
+	// PB 6 => TIM4 CH1
+	// So confire PB6 to be AF2 Alternate function 2
+	
+}
 int main()
 {
 	//SystemClock_Config();
@@ -261,7 +326,9 @@ int main()
 
 	gpioC13_output_on_off();
 	
-	TIM3InterruptLEDB12Toggle();
+	// TIM3InterruptLEDB12Toggle();
+	PWM_Tim4();
+	
 	while(1)
 	{
 		/*

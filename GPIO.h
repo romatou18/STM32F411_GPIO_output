@@ -96,3 +96,71 @@ and GPIOx_AFRL).
 // 	uint32_t AFRH; //0x24
 // } GPIOGeneralRegister; // GPIO_TypeDef
 typedef GPIO_TypeDef GPIOGeneralRegister;
+
+
+// BSP F411
+// https://blog.embeddedexpert.io/?p=1858
+
+typedef enum
+{
+	Push_Pull=0,
+	Open_Drain
+}GPIO_Output_Type_Typedef;
+
+typedef enum
+{
+	Low_Speed=0,
+	Medium_Speed,
+	Fast_Speed,
+	High_Speed
+}GPIO_OutputSpeed_Typedef;
+
+typedef enum
+{
+	No_Pullup_PullDown=0,
+	PullUp,
+	PullDown
+}GPIO_PullUPPullDown_Typedef;
+
+typedef enum
+{
+	AF0=0,
+	AF1,
+	AF2,
+	AF3,
+	AF4,
+	AF5,
+	AF6,
+	AF7,
+	AF8,
+	AF9,
+	AF10,
+	AF11,
+	AF12,
+	AF13,
+	AF14,
+	AF15,
+
+}Alternate_Type_Typedef;
+
+typedef enum
+{
+	Reset,
+	Set
+
+}GPIO_State_Typedef;
+
+
+void GPIOA_CLOCK_ENABLE()
+{
+	RCC->AHB1ENR|= RCC_AHB1ENR_GPIOAEN;
+}
+
+void GPIOC_CLOCK_ENABLE()
+{
+	RCC->AHB1ENR|= RCC_AHB1ENR_GPIOCEN;
+}
+void GPIOB_CLOCK_ENABLE()
+{
+	RCC->AHB1ENR|= RCC_AHB1ENR_GPIOBEN;
+}
